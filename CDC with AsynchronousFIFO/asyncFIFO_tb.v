@@ -142,7 +142,23 @@ module asyncFIFO_tb();
         rd_en = 1;
         #10;
         rd_en = 0;
-        
+
+        // Test FIFO filling up on write
+        #20;
+        wr_en = 1;
+        while (!full) begin
+            wr_data = $random; // Write random data
+            #10;
+        end
+        wr_en = 0;
+
+        // Test FIFO emptying on read
+        #20;
+        rd_en = 1;
+        while (!empty) begin
+            #10;
+        end
+        rd_en = 0;
 
         #100;
         $finish;
