@@ -1,0 +1,100 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03/23/2025 09:13:51 PM
+// Design Name: 
+// Module Name: FIR_Filter_pipelined
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module FIR_Pipelined(clk, reset, data_in, data_out);
+
+    parameter N = 8; // Input and output bit width
+    parameter COEFF_WIDTH = 6; // Coefficient bit width
+
+    input clk, reset;
+    input [N-1:0] data_in;
+    output reg [N-1:0] data_out;
+
+    // Coefficients for a 5-tap FIR filter
+    wire [COEFF_WIDTH-1:0] b0 = 6'b000001; // 1 in decimal
+    wire [COEFF_WIDTH-1:0] b1 = 6'b000010; // 2 in decimal
+    wire [COEFF_WIDTH-1:0] b2 = 6'b000011; // 3 in decimal
+    wire [COEFF_WIDTH-1:0] b3 = 6'b000010; // 2 in decimal
+    wire [COEFF_WIDTH-1:0] b4 = 6'b000001; // 1 in decimal
+
+    // Stage 1: Read sample and shift previous samples
+    reg [N-1:0] x [0:4]; // Buffer for current and delayed samples
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            x[0] <= 0;
+            x[1] <= 0;
+            x[2] <= 0;
+            x[3] <= 0;
+            x[4] <= 0;
+        end else begin
+            x[0] <= data_in; // Load new sample
+            x[1] <= x[0];    // Shift previous samples
+            x[2] <= x[1];
+            x[3] <= x[2];
+            x[4] <= x[3];
+        end
+    end
+
+    // Stage 2: Perform parallel MAC operations
+    reg [N+COEFF_WIDTH-1:0] Mul0, Mul1, Mul2, Mul3, Mul4;
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            Mul0 <= 0;
+            Mul1 <= 0;
+            Mul2 <= 0;
+            Mul3 <= 0;
+            Mul4 <= 0;
+        end else begin
+            Mul0 <= x[0] * b0; // Multiply current sample
+            Mul1 <= x[1] * b1; // Multiply delayed samples
+            Mul2 <= x[2] * b2;
+            Mul3 <= x[3] * b3;
+            Mul4 <= x[4] * b4;
+        end
+    end
+
+    // Accumulate multiplication results
+    reg [N+COEFF_WIDTH+1:0] Add_final;
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            Add_final <= 0;
+        else
+            Add_final <= Mul0 + Mul1 + Mul2 + Mul3 + Mul4;
+    end
+
+    // Stage 3: Store the filtered sample
+    reg [N-1:0] scaled_output;
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            scaled_output <= 0;
+        else
+            scaled_output <= Add_final >> COEFF_WIDTH; // Scale back to 8 bits
+    end
+
+    // Output assignment
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            data_out <= 0;
+        else
+            data_out <= scaled_output;
+    end
+
+endmodule
