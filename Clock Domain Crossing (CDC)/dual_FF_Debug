@@ -1,0 +1,46 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03/25/2025 12:45:58 PM
+// Design Name: 
+// Module Name: dual_FF_Debug
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module dual_FF_Debug (
+    input  wire clk_A,
+    input  wire clk_B,
+    input  wire IN,   
+    output reg  A,    
+    output reg  B1,   
+    output reg  B2,   
+    output wire B     
+);
+
+    // clkA
+    always @(posedge clk_A) begin
+        A <= IN;
+    end
+
+    // clkB
+    always @(posedge clk_B) begin
+        B1 <= A;
+        B2 <= B1;
+    end
+
+    assign B = B2;
+
+endmodule
