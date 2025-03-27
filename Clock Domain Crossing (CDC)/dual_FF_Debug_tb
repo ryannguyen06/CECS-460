@@ -1,0 +1,72 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03/25/2025 12:46:33 PM
+// Design Name: 
+// Module Name: dual_FF_Debug_tb
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module dual_FF_Debug_tb;
+
+    reg clk_A;
+    reg clk_B;
+    reg IN;
+    wire B;
+    wire A, B1, B2;
+    
+    dual_FF_Debug UUT (
+        .clk_A(clk_A),
+        .clk_B(clk_B),
+        .IN(IN),
+        .A(A),
+        .B1(B1),
+        .B2(B2),
+        .B(B)
+    );
+    
+    // clk A
+    initial begin
+        clk_A = 0;
+        forever #5 clk_A = ~clk_A;
+    end
+    
+    // create asynchronous relationship
+    initial begin
+        clk_B = 0;
+        forever #7.5 clk_B = ~clk_B;
+    end
+    
+    // stimulus for in small random delays
+    initial begin
+        IN = 0;
+        repeat (50) begin
+            // delay
+            #( $urandom_range(3,12) );
+            IN = ~IN;
+            // delay trying to force timing violation 
+            #1;
+        end
+        #100;
+        $finish;
+    end
+    
+    initial begin
+        $dumpfile("dual_FF_Debug_tb.vcd");
+        $dumpvars(0, dual_FF_Debug_tb);
+    end
+
+endmodule
